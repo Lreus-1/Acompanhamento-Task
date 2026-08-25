@@ -498,7 +498,7 @@
 
       <button class="btn-primary" id="btnProcess" disabled>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-        <span id="btnProcessLabel">Processar e salvar</span>
+        <span id="btnProcessLabel">Processar</span>
       </button>
 
       <div class="upload-error" id="uploadError">
@@ -506,20 +506,41 @@
         <span id="uploadErrorText"></span>
       </div>
 
-      <div class="upload-warn" id="uploadWarn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-        <span id="uploadWarnText"></span>
-      </div>
+      <div class="upload-footnote">Os dados são processados aqui no navegador e viram um arquivo HTML novo pra você baixar e subir no GitHub — nada é enviado para nenhum servidor.</div>
+    </div>
 
-      <div class="upload-footnote">Os dados ficam salvos só neste navegador (localStorage) — não são enviados para nenhum servidor.</div>
+    <!-- Painel de sucesso: aparece depois de processar, com o botão de baixar -->
+    <div class="upload-wrap" id="uploadSuccess" style="display:none;">
+      <div class="auth-card" style="text-align:left; animation:none; opacity:1; transform:none;">
+        <div class="auth-icon" style="background:var(--success);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <div class="auth-title" id="uploadSuccessSummary">Dados processados</div>
+        <div class="auth-desc">Baixe o arquivo abaixo e suba no GitHub (substituindo o <span class="mono">index.html</span> atual) pra atualizar o site pra todo mundo. Esta aba já está mostrando os dados novos só nesta sessão.</div>
+
+        <button class="btn-primary" id="btnDownloadHtml" style="margin-top:20px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14a2 2 0 0 0 2-2v-5"/><path d="M3 21v-5a2 2 0 0 1 2-2"/></svg>
+          Baixar HTML atualizado
+        </button>
+        <button class="auth-submit" id="btnViewApp" style="background:var(--surface); color:var(--text-1); border:1px solid var(--border); box-shadow:none; margin-top:10px;">
+          Ver Acompanhamento agora
+        </button>
+      </div>
     </div>
   </section>
 
 </div>
 
+<script id="data-json" type="application/json">null</script>
+
 <script>
 (function(){
   "use strict";
+
+  /* RAW_HTML_SOURCE precisa ser a PRIMEIRA coisa capturada — antes de qualquer
+     renderizar() rodar e sujar o DOM com conteúdo dinâmico. É a "foto" do HTML
+     puro, como ele nasceu, usada depois pra gerar o arquivo atualizado. */
+  var RAW_HTML_SOURCE = document.documentElement.outerHTML;
 
   /* =================== ICONS =================== */
   function ic(paths){
@@ -533,11 +554,11 @@
     inbox: ic('<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/>'),
     file: ic('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>'),
     checkSm: ic('<path d="M20 6 9 17l-5-5"/>'),
-    upload: ic('<path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14a2 2 0 0 0 2-2v-5"/><path d="M3 21v-5a2 2 0 0 1 2-2"/>')
+    upload: ic('<path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 21h14a2 2 0 0 0 2-2v-5"/><path d="M3 21v-5a2 2 0 0 1 2-2"/>'),
+    download: ic('<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14a2 2 0 0 0 2-2v-5"/><path d="M3 21v-5a2 2 0 0 1 2-2"/>')
   };
 
   /* =================== CONSTANTS =================== */
-  var STORAGE_KEY = 'luvibi_planificador_v1';
   var PASSWORD = '3800';
   var TIPOS = ['NAB','CERVEJA','MKT','MATCH','Outro'];
   var DIAS_ORDER = ['SEG','TER','QUA','QUI','SEX','SAB','DOM'];
@@ -568,6 +589,14 @@
     var n = parseInt(s, 10);
     return isNaN(n) ? null : n;
   }
+
+  /* ============================================================
+     PARTE B — ADAPTE AQUI (lógica específica deste projeto)
+     Tudo daqui até "FIM DA PARTE B" é o que muda de projeto pra
+     projeto: as regras de classificação e a chave de cruzamento
+     entre os dois relatórios. A "casca" ao redor (upload, captura
+     do HTML puro, geração do arquivo novo) é sempre a mesma receita.
+     ============================================================ */
 
   function classifyTipoTarefa(clusterPrimario, categoria){
     var cp = norm(clusterPrimario), cat = norm(categoria);
@@ -630,7 +659,7 @@
     });
   }
 
-  function parseClientesCsv(file){
+  function lerCsv(file){
     return readFileAsArrayBuffer(file).then(function(buf){
       var text;
       try{ text = new TextDecoder('windows-1252').decode(buf); }
@@ -667,7 +696,7 @@
     });
   }
 
-  function parseBeesForce(file){
+  function lerXlsx(file){
     return readFileAsArrayBuffer(file).then(function(buf){
       var wb = XLSX.read(buf, { type:'array', cellDates:true });
       var sheetName = wb.SheetNames.indexOf('Export') !== -1 ? 'Export' : wb.SheetNames[0];
@@ -741,7 +770,11 @@
     return cards;
   }
 
-  /* =================== SERIALIZE / DESERIALIZE (localStorage) =================== */
+  /* ============================================================
+     FIM DA PARTE B
+     ============================================================ */
+
+  /* =================== SERIALIZE / DESERIALIZE (embutido no HTML) =================== */
   function serializeState(){
     var textos = [];
     var textIndex = new Map();
@@ -829,22 +862,35 @@
     STATE.clientCards = buildCards();
   }
 
-  function saveToStorage(){
-    var payload = serializeState();
-    var json = JSON.stringify(payload);
-    try{
-      localStorage.setItem(STORAGE_KEY, json);
-      return { ok:true, bytes: json.length };
-    }catch(e){
-      return { ok:false, bytes: json.length, error:e };
+  /* baixarNovoHtml: pega a "foto" congelada do HTML puro (RAW_HTML_SOURCE),
+     acha só o trecho <script id="data-json">...<\/script> nela e troca o
+     conteúdo pelo JSON novo. O resto do arquivo (CSS, HTML, todo o resto
+     do JS) sai intacto — é isso que faz o arquivo "se regenerar sozinho". */
+  function baixarNovoHtml(payload){
+    var jsonStr = JSON.stringify(payload).replace(/<\/script/gi, '<\\/script');
+    var novoHtml = RAW_HTML_SOURCE.replace(
+      /(<script id="data-json" type="application\/json">)[\s\S]*?(<\/script>)/,
+      function(m, abre, fecha){ return abre + jsonStr + fecha; }
+    );
+    if(novoHtml === RAW_HTML_SOURCE){
+      throw new Error('Não encontrei o bloco <script id="data-json"> no HTML pra atualizar.');
     }
+    novoHtml = '<!DOCTYPE html>\n' + novoHtml;
+    var blob = new Blob([novoHtml], { type:'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = 'index.html';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
   }
 
-  function loadFromStorage(){
+  function carregarDadosEmbutidos(){
+    var el = document.getElementById('data-json');
+    if(!el) return false;
+    var txt = (el.textContent || '').trim();
+    if(!txt || txt === 'null') return false;
     try{
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return false;
-      var obj = JSON.parse(raw);
+      var obj = JSON.parse(txt);
       deserializeState(obj);
       return true;
     }catch(e){
@@ -1095,7 +1141,7 @@
     document.getElementById('btnClearFilters').classList.toggle('show', n>0);
   }
 
-  function refreshFiltersUI(){
+  function renderizar(){
     buildFilterSelects();
     updateHeaderContext();
     render();
@@ -1108,7 +1154,7 @@
     STATE.filters.setor = 'all';
     STATE.filters.dia = 'all';
     STATE.renderLimit = 24;
-    refreshFiltersUI();
+    renderizar();
   }
 
   /* =================== NAVIGATION =================== */
@@ -1120,6 +1166,7 @@
     // sempre exige senha de novo ao entrar
     document.getElementById('authGate').style.display = '';
     document.getElementById('uploadForm').style.display = 'none';
+    document.getElementById('uploadSuccess').style.display = 'none';
     document.getElementById('authInput').value = '';
     document.getElementById('authError').classList.remove('show');
     setTimeout(function(){ document.getElementById('authInput').focus(); }, 250);
@@ -1149,6 +1196,7 @@
 
   /* =================== UPLOAD SCREEN LOGIC =================== */
   var selectedFiles = { bees:null, csv:null };
+  var lastProcessedPayload = null;
 
   function setupDropzone(dzId, inputId, fileLabelId, kind){
     var dz = document.getElementById(dzId);
@@ -1179,21 +1227,16 @@
     document.getElementById('uploadError').classList.add('show');
   }
   function hideUploadError(){ document.getElementById('uploadError').classList.remove('show'); }
-  function showUploadWarn(msg){
-    document.getElementById('uploadWarnText').textContent = msg;
-    document.getElementById('uploadWarn').classList.add('show');
-  }
-  function hideUploadWarn(){ document.getElementById('uploadWarn').classList.remove('show'); }
 
   function processFiles(){
-    hideUploadError(); hideUploadWarn();
+    hideUploadError();
     var btn = document.getElementById('btnProcess');
     var label = document.getElementById('btnProcessLabel');
     btn.disabled = true; btn.classList.add('loading');
     label.textContent = 'Processando...';
 
     setTimeout(function(){
-      Promise.all([ parseClientesCsv(selectedFiles.csv), parseBeesForce(selectedFiles.bees) ])
+      Promise.all([ lerCsv(selectedFiles.csv), lerXlsx(selectedFiles.bees) ])
         .then(function(results){
           STATE.clientsByCode = results[0].clientsByCode;
           STATE.setoresMap = results[0].setoresMap;
@@ -1205,14 +1248,16 @@
           STATE.renderLimit = 24;
           document.getElementById('searchInput').value = '';
 
-          var saveResult = saveToStorage();
-          if(!saveResult.ok){
-            showUploadWarn('Dados processados, mas não coube no armazenamento local do navegador ('+(saveResult.bytes/1024/1024).toFixed(1)+'MB). A lista vai funcionar normalmente nesta sessão, mas pode não persistir ao fechar a aba.');
-          }
+          lastProcessedPayload = serializeState();
+          renderizar();
 
-          refreshFiltersUI();
+          document.getElementById('uploadForm').style.display = 'none';
+          document.getElementById('uploadSuccess').style.display = '';
+          document.getElementById('uploadSuccessSummary').textContent =
+            STATE.clientCards.length.toLocaleString('pt-BR')+' clientes · '+
+            lastProcessedPayload.tarefas.length.toLocaleString('pt-BR')+' tarefas processadas';
+
           selectedFiles = { bees:null, csv:null };
-          setTimeout(goToApp, saveResult.ok ? 150 : 1600);
         })
         .catch(function(err){
           showUploadError(err.message || 'Não foi possível processar os arquivos.');
@@ -1220,7 +1265,7 @@
         .finally(function(){
           btn.disabled = !(selectedFiles.bees && selectedFiles.csv);
           btn.classList.remove('loading');
-          label.textContent = 'Processar e salvar';
+          label.textContent = 'Processar';
         });
     }, 30);
   }
@@ -1234,7 +1279,7 @@
     searchTimer = setTimeout(function(){
       STATE.search = val.trim().toLowerCase();
       STATE.renderLimit = 24;
-      refreshFiltersUI();
+      renderizar();
     }, 160);
   });
   document.getElementById('searchClear').addEventListener('click', function(){
@@ -1243,7 +1288,7 @@
     document.getElementById('searchClear').classList.remove('show');
     STATE.search = '';
     STATE.renderLimit = 24;
-    refreshFiltersUI();
+    renderizar();
     input.focus();
   });
 
@@ -1253,24 +1298,28 @@
   document.getElementById('btnProcess').addEventListener('click', processFiles);
   document.getElementById('btnGoUpdate').addEventListener('click', goToUpdate);
   document.getElementById('btnBackToApp').addEventListener('click', goToApp);
+  document.getElementById('btnDownloadHtml').addEventListener('click', function(){
+    if(!lastProcessedPayload) return;
+    try{ baixarNovoHtml(lastProcessedPayload); }
+    catch(e){ alert('Não consegui gerar o arquivo: '+e.message); }
+  });
+  document.getElementById('btnViewApp').addEventListener('click', goToApp);
   document.getElementById('authSubmit').addEventListener('click', tryAuth);
   document.getElementById('authInput').addEventListener('keydown', function(e){ if(e.key==='Enter') tryAuth(); });
   document.getElementById('btnClearFilters').addEventListener('click', clearAllFilters);
 
-  var hasData = loadFromStorage();
+  var hasData = carregarDadosEmbutidos();
   document.querySelectorAll('.native-select[data-cat]').forEach(function(el){
     el.addEventListener('change', function(){
       var cat = el.getAttribute('data-cat');
       var raw = el.value;
       STATE.filters[cat] = (cat==='setor' && raw!=='all') ? parseInt(raw,10) : raw;
       STATE.renderLimit = 24;
-      refreshFiltersUI();
+      renderizar();
     });
   });
 
-  buildFilterSelects();
-  updateHeaderContext();
-  render();
+  renderizar();
 
 })();
 </script>
