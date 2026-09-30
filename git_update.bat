@@ -20,11 +20,41 @@ if "%commitMsg%"=="" (
     exit /b 1
 )
 
+echo.
+echo ==============================
+echo   CRIANDO COMMIT
+echo ==============================
+echo.
+
 git commit -m "%commitMsg%"
-git push
+
+if errorlevel 1 (
+    echo.
+    echo [AVISO] Nenhum commit foi criado ou ocorreu um erro.
+    echo.
+)
+
+echo.
+echo ==============================
+echo   ENVIANDO PARA O GITHUB
+echo ==============================
+echo.
+
+git push origin main --force
+
+if errorlevel 1 (
+    echo.
+    echo [ERRO] Falha ao enviar para o GitHub.
+    echo.
+    pause
+    exit /b 1
+)
 
 echo.
 echo ==============================
 echo   PROCESSO CONCLUIDO!
 echo ==============================
+echo.
+echo O GitHub foi atualizado com a versao local.
+echo.
 pause
