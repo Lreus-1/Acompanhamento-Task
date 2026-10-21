@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="pt-BR"><head>
+<html lang="pt-BR">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>LUVI BI · Acompanhamento de Tarefas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -258,6 +259,7 @@
   .badge.tipo-MKT{ color:#C08AE0; border-color:rgba(192,138,224,.35); background:rgba(192,138,224,.12); }
   .badge.tipo-MATCH{ color:#7ED3C8; border-color:rgba(126,211,200,.35); background:rgba(126,211,200,.12); }
   .badge.tipo-VOLUME{ color:#E0966B; border-color:rgba(224,150,107,.35); background:rgba(224,150,107,.12); }
+  .badge.tipo-LONGNECK{ color:#E58FB3; border-color:rgba(229,143,179,.35); background:rgba(229,143,179,.12); }
   .badge.tipo-Outro{ color:var(--text-3); }
   .badge.zero-ok{ color:var(--success); border-color:rgba(95,191,143,.35); background:var(--success-dim); }
   .badge.oportunidade{ color:var(--warn); border-color:rgba(226,169,60,.35); background:var(--warn-dim); }
@@ -420,7 +422,7 @@
   .rota-btn svg{ width:14px; height:14px; flex-shrink:0; }
   .rota-btn.primary{ background:var(--brand-gold); border-color:var(--brand-gold); color:#1a1400; }
   .rota-table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--border); border-radius:var(--radius-md); background:var(--surface); margin-bottom:12px; }
-  .rota-table{ border-collapse:collapse; width:100%; min-width:960px; font-size:11.5px; }
+  .rota-table{ border-collapse:collapse; width:100%; min-width:1030px; font-size:11.5px; }
   .rota-table th{
     text-align:left; padding:10px; font-size:9.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:600;
     color:var(--text-3); background:var(--surface-raised); border-bottom:1px solid var(--border-strong); line-height:1.25; vertical-align:bottom;
@@ -434,6 +436,24 @@
   .rota-table th.flag, .rota-table td.flag{ text-align:center; white-space:nowrap; }
   .rota-table td.flag-sim{ color:var(--success); font-weight:600; }
   .rota-table td.flag-nao, .rota-table td.flag-na{ color:var(--text-3); }
+  .ms-btn{ text-align:left; display:block; cursor:pointer; }
+  .ms-wrap.ms-open .ms-btn{ border-color:var(--brand-gold); }
+  .ms-panel{
+    display:none; position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:40;
+    max-height:300px; overflow-y:auto; padding:4px;
+    background:var(--surface-raised); border:1px solid var(--border-strong); border-radius:var(--radius-sm); box-shadow:var(--shadow-sm);
+  }
+  .ms-wrap.ms-open .ms-panel{ display:block; }
+  .ms-opt{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:8px 10px; border-radius:6px; font-size:12px; font-weight:500; color:var(--text-2); }
+  .ms-opt:hover{ background:rgba(148,180,214,.08); }
+  .ms-opt.on{ color:var(--brand-gold); }
+  .ms-box{ width:15px; height:15px; flex-shrink:0; border:1px solid var(--border-strong); border-radius:4px; display:inline-flex; align-items:center; justify-content:center; }
+  .ms-box svg{ width:11px; height:11px; display:none; }
+  .ms-opt.on .ms-box{ background:var(--brand-gold); border-color:var(--brand-gold); color:#1a1400; }
+  .ms-opt.on .ms-box svg{ display:block; }
+  .ms-hint{ margin-top:4px; padding:7px 10px 4px; border-top:1px solid var(--border); font-size:10.5px; color:var(--text-3); }
+  .rota-table td.lacuna-pos{ color:var(--warn); font-weight:700; font-size:13px; }
+  .rota-table td.lacuna-zero{ color:var(--text-3); }
   .rota-table td.rota-vazio{ text-align:center; padding:34px 12px; color:var(--text-3); }
   .rota-table tbody tr:hover td{ background:rgba(148,180,214,.05); }
 
@@ -477,7 +497,7 @@
           <div class="page-title">Acompanhamento</div>
         </div>
         <button class="icon-btn" id="btnGoUpdate" title="Atualizar dados">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82A1.65 1.65 0 0 0 3 13.09H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </button>
       </div>
 
@@ -488,7 +508,7 @@
       </div>
 
       <div class="last-updated" id="lastUpdatedLine" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
         <span id="lastUpdatedText"></span>
       </div>
     </div>
@@ -503,10 +523,10 @@
 
       <div class="search-row">
         <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           <input type="text" id="searchInput" placeholder="Buscar cliente, cidade ou código...">
           <button class="search-clear" id="searchClear">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
           </button>
         </div>
       </div>
@@ -515,7 +535,7 @@
         <div class="filter-panel-head">
           <div class="filter-group-label" style="margin:0;">Filtros</div>
           <button class="clear-filters" id="btnClearFilters">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
             Limpar filtros
           </button>
         </div>
@@ -525,42 +545,42 @@
             <div class="filter-group-label">Tipo de tarefa</div>
             <div class="select-wrap">
               <select class="native-select" id="selectTipo" data-cat="tipo"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
           <div class="filter-group">
             <div class="filter-group-label">Cerveja zero</div>
             <div class="select-wrap">
               <select class="native-select" id="selectZero" data-cat="zero"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
           <div class="filter-group">
             <div class="filter-group-label">Validação</div>
             <div class="select-wrap">
               <select class="native-select" id="selectValidacao" data-cat="validacao"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
           <div class="filter-group">
             <div class="filter-group-label">Oportunidades</div>
             <div class="select-wrap">
               <select class="native-select" id="selectOportunidade" data-cat="oportunidade"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
           <div class="filter-group">
             <div class="filter-group-label">Dia de visita</div>
             <div class="select-wrap">
               <select class="native-select" id="selectDia" data-cat="dia"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
           <div class="filter-group">
             <div class="filter-group-label">Setor / RN</div>
             <div class="select-wrap">
               <select class="native-select" id="selectSetor" data-cat="setor"></select>
-              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg>
+              <svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </div>
           </div>
         </div>
@@ -584,10 +604,10 @@
         <div class="rota-controls">
           <div class="search-row">
             <div class="search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input type="text" id="rotaSearch" placeholder="Buscar cliente, código ou texto da tarefa...">
               <button class="search-clear" id="rotaSearchClear">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
               </button>
             </div>
           </div>
@@ -595,7 +615,7 @@
             <div class="filter-panel-head">
               <div class="filter-group-label" style="margin:0;">Filtros</div>
               <button class="clear-filters" id="rotaClearFilters">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg>
                 Limpar filtros
               </button>
             </div>
@@ -609,11 +629,11 @@
           <div class="rota-summary" id="rotaSummary"></div>
           <div class="rota-buttons">
             <button class="rota-btn" id="rotaBtnPrint">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"></path><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
               Imprimir
             </button>
             <button class="rota-btn primary" id="rotaBtnCsv">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14a2 2 0 0 0 2-2v-5"></path><path d="M3 21v-5a2 2 0 0 1 2-2"></path></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14a2 2 0 0 0 2-2v-5"/><path d="M3 21v-5a2 2 0 0 1 2-2"/></svg>
               Baixar CSV
             </button>
           </div>
@@ -623,7 +643,7 @@
           <table class="rota-table">
             <thead><tr>
               <th>Código RN</th><th>Código Cliente</th><th>Nome Fantasia</th><th>Cluster Primário</th><th>Categoria</th>
-              <th class="num">Qtd Solicitada</th><th class="num">Qtd Já Comprada</th><th>Texto da Tarefa</th>
+              <th class="num">Qtd Solicitada</th><th class="num">Qtd Já Comprada</th><th class="num" title="Quanto ainda falta vender: Qtd Solicitada − Qtd Já Comprada">Lacuna</th><th>Texto da Tarefa</th>
               <th class="flag">Completa</th><th class="flag">Válida</th><th class="flag">Pré Validada</th>
             </tr></thead>
             <tbody id="rotaBody"></tbody>
@@ -638,7 +658,7 @@
   <section class="screen" id="screenUpdate">
     <div class="update-header">
       <button class="icon-btn" id="btnBackToApp" title="Voltar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
       </button>
       <div class="update-title-wrap">
         <div class="eyebrow"><span class="dot"></span>LUVI BI</div>
@@ -650,7 +670,7 @@
     <div class="auth-wrap" id="authGate">
       <div class="auth-card">
         <div class="auth-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
         </div>
         <div class="auth-title">Área restrita</div>
         <div class="auth-desc">Digite a senha para acessar o envio de novos relatórios.</div>
@@ -664,7 +684,7 @@
     <div class="upload-wrap" id="uploadForm" style="display:none;">
       <label class="dropzone" id="dzBees" for="fileBees">
         <div class="dz-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9 15h6"></path><path d="M9 11h6"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6"/><path d="M9 11h6"/></svg>
         </div>
         <div class="dz-body">
           <div class="dz-title">Relatório BEES Force</div>
@@ -676,7 +696,7 @@
 
       <label class="dropzone" id="dzCsv" for="fileCsv">
         <div class="dz-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9.5 13.5a2 2 0 1 0 0 3"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9.5 13.5a2 2 0 1 0 0 3"/></svg>
         </div>
         <div class="dz-body">
           <div class="dz-title">Relatório 01.20.11</div>
@@ -690,7 +710,7 @@
 
       <label class="dropzone" id="dzVendas" for="fileVendas">
         <div class="dz-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9.5 13.5a2 2 0 1 0 0 3"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9.5 13.5a2 2 0 1 0 0 3"/></svg>
         </div>
         <div class="dz-body">
           <div class="dz-title">Relatório 03.05.09 (vendas)</div>
@@ -702,7 +722,7 @@
 
       <label class="dropzone" id="dzHistorico" for="fileHistorico">
         <div class="dz-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M9.5 13.5a2 2 0 1 0 0 3"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9.5 13.5a2 2 0 1 0 0 3"/></svg>
         </div>
         <div class="dz-body">
           <div class="dz-title">Relatório 05.12 (histórico anual)</div>
@@ -714,23 +734,23 @@
 
       <label class="dropzone" id="dzCestas" for="fileCestas">
         <div class="dz-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><path d="M3.3 7 12 12l8.7-5"></path><path d="M12 22V12"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.3 7 12 12l8.7-5"/><path d="M12 22V12"/></svg>
         </div>
         <div class="dz-body">
           <div class="dz-title">Cestas de Produtos</div>
           <div class="dz-desc">Um ou mais .xlsx (Zero, Cerveja, Match, Nab, Mkt, Red Bull, H2OH, Gatorade, Mondelez, Long Neck Premium, 600ml, Inteira, Diageo, RGB, Fonte da Ilha...) — pode selecionar vários de uma vez, a cesta é identificada pela própria coluna "Cesta" de cada um</div>
           <div class="dz-file" id="dzCestasFile"></div>
         </div>
-        <input type="file" id="fileCestas" accept=".xlsx,.xls" multiple="">
+        <input type="file" id="fileCestas" accept=".xlsx,.xls" multiple>
       </label>
 
-      <button class="btn-primary" id="btnProcess" disabled="">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      <button class="btn-primary" id="btnProcess" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
         <span id="btnProcessLabel">Processar</span>
       </button>
 
       <div class="upload-error" id="uploadError">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
         <span id="uploadErrorText"></span>
       </div>
 
@@ -741,13 +761,13 @@
     <div class="upload-wrap" id="uploadSuccess" style="display:none;">
       <div class="auth-card" style="text-align:left; animation:none; opacity:1; transform:none;">
         <div class="auth-icon" style="background:var(--success);">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
         </div>
         <div class="auth-title" id="uploadSuccessSummary">Dados processados</div>
         <div class="auth-desc">Baixe o arquivo abaixo e suba no GitHub (substituindo o <span class="mono">index.html</span> atual) pra atualizar o site pra todo mundo. Esta aba já está mostrando os dados novos só nesta sessão.</div>
 
         <button class="btn-primary" id="btnDownloadHtml" style="margin-top:20px;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14a2 2 0 0 0 2-2v-5"></path><path d="M3 21v-5a2 2 0 0 1 2-2"></path></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14a2 2 0 0 0 2-2v-5"/><path d="M3 21v-5a2 2 0 0 1 2-2"/></svg>
           Baixar HTML atualizado
         </button>
         <button class="auth-submit" id="btnViewApp" style="background:var(--surface); color:var(--text-1); border:1px solid var(--border); box-shadow:none; margin-top:10px;">
@@ -796,7 +816,14 @@
   var GITHUB_OWNER = 'Lreus-1';
   var GITHUB_REPO = 'Acompanhamento-Task';
   var GITHUB_FILE_PATH = 'index.html';
-  var TIPOS = ['NAB','CERVEJA','MKT','MATCH','VOLUME','Outro'];
+  // A ORDEM daqui define o bit de cada tag no JSON embutido: só acrescente no FIM
+  // (mudar a ordem quebraria os dados já gerados).
+  var TIPOS = ['NAB','CERVEJA','MKT','MATCH','VOLUME','Outro','LONG NECK'];
+  // Ordem em que os tipos aparecem nos filtros (LONG NECK antes de "Outro")
+  var TIPOS_FILTRO = ['NAB','CERVEJA','MKT','MATCH','VOLUME','LONG NECK','Outro'];
+  // O BEES Force não tem um campo de long neck: a tag vem do texto da tarefa
+  // ("... LONG NECK 330", "Coleção +LN de Long Necks HE", etc.)
+  var RE_LONG_NECK = /LONG\s*NECKS?|\+\s*LN\b/i;
   var DIAS_ORDER = ['SEG','TER','QUA','QUI','SEX','SAB','DOM'];
   var DIAS_LABEL = { SEG:'Seg', TER:'Ter', QUA:'Qua', QUI:'Qui', SEX:'Sex', SAB:'Sáb', DOM:'Dom' };
   var STATUS_LIST = ['Validada','Aberto','Invalida']; // índice de storage
@@ -1058,7 +1085,7 @@
 
   // Retorna um ARRAY de tags (uma tarefa pode ter mais de uma, ex: Volume +
   // Match ao mesmo tempo — cada regra é checada de forma independente).
-  function classifyTiposTarefa(clusterPrimario, categoria){
+  function classifyTiposTarefa(clusterPrimario, categoria, texto){
     var cp = norm(clusterPrimario), cat = norm(categoria);
     var tags = [];
     if(cp === 'Desenvolvimento de Portfólio' && cat === 'NAB') tags.push('NAB');
@@ -1066,6 +1093,7 @@
     if(cp === 'Marketplace') tags.push('MKT');
     if((cp === 'Desenvolvimento de Portfólio' || cp === 'Volume') && cat === 'MATCH') tags.push('MATCH');
     if(cp === 'Volume') tags.push('VOLUME');
+    if(RE_LONG_NECK.test(texto || '')) tags.push('LONG NECK');
     if(!tags.length) tags.push('Outro');
     return tags;
   }
@@ -1297,7 +1325,7 @@
           gap: gapInfo.gap,
           isOpportunity: gapInfo.isOpportunity,
           dataVisita: fmtDate(r['Data Visita']),
-          tiposTarefa: classifyTiposTarefa(clusterPrimario, categoria),
+          tiposTarefa: classifyTiposTarefa(clusterPrimario, categoria, texto),
           cervejaZero: classifyCervejaZero(categoria, texto),
           isProativa: RE_PROATIVA.test(texto),
           isDesenvolvimentoPortfolio: clusterPrimario === 'Desenvolvimento de Portfólio',
@@ -1542,6 +1570,10 @@
       var cervejaZero = t[2] === 1 ? 'OK' : 'NOK';
       var statusIdx = t[3];
       var texto = textos[t[4]] || '';
+      if(RE_LONG_NECK.test(texto) && tiposTarefa.indexOf('LONG NECK') === -1){
+        tiposTarefa = tiposTarefa.filter(function(x){ return x !== 'Outro'; });
+        tiposTarefa.push('LONG NECK');
+      }
       var setor = t[5];
       var dataVisita = t[6];
       var qtdSolicitada = t[7];
@@ -1744,7 +1776,7 @@
   }
 
   function tipoBadgesHtml(tags){
-    return tags.map(function(tag){ return '<span class="badge tipo-'+tag+'">'+tag+'</span>'; }).join('');
+    return tags.map(function(tag){ return '<span class="badge tipo-'+tag.replace(/\s+/g,'')+'">'+tag+'</span>'; }).join('');
   }
 
   function taskRowHtml(t, pdv){
@@ -2143,7 +2175,7 @@
 
   function buildFilterSelects(){
     fillSelect(document.getElementById('selectTipo'), 'Todos os tipos',
-      TIPOS.map(function(t){ return {value:t, label:t}; }), STATE.filters.tipo);
+      TIPOS_FILTRO.map(function(t){ return {value:t, label:t}; }), STATE.filters.tipo);
 
     fillSelect(document.getElementById('selectZero'), 'Todos',
       [{value:'OK',label:'OK'},{value:'NOK',label:'NOK'}], STATE.filters.zero);
@@ -2192,9 +2224,9 @@
     { key:'tipo', label:'Tipo de tarefa' }, { key:'zero', label:'Cerveja zero' },
     { key:'validacao', label:'Validação' }, { key:'oportunidade', label:'Oportunidades' },
     { key:'dia', label:'Dia de visita' }, { key:'setor', label:'Setor / RN' },
-    { key:'cluster', label:'Cluster primário' }, { key:'categoria', label:'Categoria' }
+    { key:'cluster', label:'Cluster primário', multi:true }, { key:'categoria', label:'Categoria' }
   ];
-  var ROTA_COLUNAS_CSV = ['Código RN','Código Cliente','Nome Fantasia','Cluster Primário','Categoria','Qtd Solicitada','Qtd Já Comprada','Texto da Tarefa','Completa','Válida','Pré Validada'];
+  var ROTA_COLUNAS_CSV = ['Código RN','Código Cliente','Nome Fantasia','Cluster Primário','Categoria','Qtd Solicitada','Qtd Já Comprada','Lacuna','Texto da Tarefa','Completa','Válida','Pré Validada'];
   var ROTA_PASSO = 300;
   var rotaCollator = new Intl.Collator('pt-BR');
 
@@ -2204,6 +2236,9 @@
   function montarGridFiltrosRota(){
     var chevron = '<svg class="select-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
     document.getElementById('rotaFilterGrid').innerHTML = ROTA_SELECTS.map(function(s){
+      if(s.multi){
+        return '<div class="filter-group"><div class="filter-group-label">'+s.label+'</div><div class="select-wrap ms-wrap" id="rotaMs_'+s.key+'" data-ms="'+s.key+'"><button type="button" class="native-select ms-btn" aria-haspopup="listbox" aria-expanded="false"><span class="ms-label"></span></button>'+chevron+'<div class="ms-panel" role="listbox"></div></div></div>';
+      }
       return '<div class="filter-group"><div class="filter-group-label">'+s.label+'</div><div class="select-wrap"><select class="native-select" id="rotaSel_'+s.key+'" data-rota="'+s.key+'"></select>'+chevron+'</div></div>';
     }).join('');
   }
@@ -2227,21 +2262,47 @@
     return o;
   }
 
+  // Filtro de seleção múltipla (hoje só o Cluster): clique simples escolhe só aquele,
+  // Ctrl/⌘ + clique marca/desmarca vários. No toque (sem Ctrl) cada toque marca/desmarca.
+  var ROTA_MS = { cluster:{ todos:'Todos os clusters', plural:'clusters' } };
+  var ROTA_TOQUE = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+
+  function rotaMsRender(key, opcoes, sel){
+    var wrap = document.getElementById('rotaMs_' + key);
+    if(!wrap) return;
+    var cfg = ROTA_MS[key], todos = (sel === 'all');
+    var btn = wrap.querySelector('.ms-btn'), panel = wrap.querySelector('.ms-panel');
+    btn.querySelector('.ms-label').textContent = todos ? cfg.todos : (sel.length === 1 ? sel[0] : sel.length + ' ' + cfg.plural + ' selecionados');
+    btn.classList.toggle('is-active', !todos);
+    var st = panel.scrollTop;
+    panel.innerHTML =
+      '<button type="button" class="ms-opt' + (todos ? ' on' : '') + '" data-ms-all="1" role="option"><span class="ms-box">' + I.checkSm + '</span><span>' + cfg.todos + '</span></button>' +
+      opcoes.map(function(v){
+        var on = !todos && sel.indexOf(v) !== -1;
+        return '<button type="button" class="ms-opt' + (on ? ' on' : '') + '" data-ms-val="' + escapeHtml(v) + '" role="option"><span class="ms-box">' + I.checkSm + '</span><span>' + escapeHtml(v) + '</span></button>';
+      }).join('') +
+      '<div class="ms-hint">' + (ROTA_TOQUE ? 'Toque para marcar vários' : 'Ctrl + clique para marcar vários') + '</div>';
+    panel.scrollTop = st;
+  }
+
   function rotaMontarSelects(){
     var o = rotaOpcoes(), f = STATE.rota.filters;
     // valor que deixou de existir nos dados volta pra "todos"
     if(f.setor !== 'all' && o.setores.indexOf(f.setor) === -1) f.setor = 'all';
     if(f.dia !== 'all' && o.dias.indexOf(f.dia) === -1) f.dia = 'all';
-    if(f.cluster !== 'all' && o.clusters.indexOf(f.cluster) === -1) f.cluster = 'all';
+    if(f.cluster !== 'all'){
+      f.cluster = f.cluster.filter(function(c){ return o.clusters.indexOf(c) !== -1; });
+      if(!f.cluster.length) f.cluster = 'all';
+    }
     if(f.categoria !== 'all' && o.categorias.indexOf(f.categoria) === -1) f.categoria = 'all';
     function sel(k){ return document.getElementById('rotaSel_'+k); }
-    fillSelect(sel('tipo'), 'Todos os tipos', TIPOS.map(function(t){ return {value:t, label:t}; }), f.tipo);
+    fillSelect(sel('tipo'), 'Todos os tipos', TIPOS_FILTRO.map(function(t){ return {value:t, label:t}; }), f.tipo);
     fillSelect(sel('zero'), 'Todos', [{value:'OK',label:'OK'},{value:'NOK',label:'NOK'}], f.zero);
     fillSelect(sel('validacao'), 'Todos', [{value:'Validada',label:'Validadas'},{value:'Pré Validada',label:'Pré validadas'},{value:'Não validada',label:'Não validadas'}], f.validacao);
     fillSelect(sel('oportunidade'), 'Todos', [{value:'so',label:'Só oportunidades (<10 cx faltando)'}], f.oportunidade);
     fillSelect(sel('dia'), 'Todos os dias', o.dias.map(function(d){ return {value:d, label:DIAS_LABEL[d]}; }), f.dia);
     fillSelect(sel('setor'), 'Todos os setores', o.setores.map(function(c){ return {value:c, label:c+' · '+titleCase(STATE.setoresMap.get(c)||'?')}; }), f.setor);
-    fillSelect(sel('cluster'), 'Todos os clusters', o.clusters.map(function(c){ return {value:c, label:c}; }), f.cluster);
+    rotaMsRender('cluster', o.clusters, f.cluster);
     fillSelect(sel('categoria'), 'Todas as categorias', o.categorias.map(function(c){ return {value:c, label:c}; }), f.categoria);
   }
 
@@ -2264,7 +2325,7 @@
         if(f.zero !== 'all' && t.cervejaZero !== f.zero) return;
         if(f.validacao !== 'all' && t.statusLabel !== f.validacao) return;
         if(f.oportunidade === 'so' && !t.isOpportunity) return;
-        if(f.cluster !== 'all' && t.clusterPrimario !== f.cluster) return;
+        if(f.cluster !== 'all' && f.cluster.indexOf(t.clusterPrimario) === -1) return;
         if(f.categoria !== 'all' && t.categoria !== f.categoria) return;
         if(q && !rotaCasaBusca(card, t, q)) return;
         rs.push({ card:card, t:t, primeiro:false });
@@ -2290,6 +2351,13 @@
     return v ? '<td class="flag flag-sim">Sim</td>' : '<td class="flag flag-nao">Não</td>';
   }
 
+  // Lacuna = o que ainda falta vender (Qtd Solicitada − Qtd Já Comprada, nunca negativa).
+  // Em tarefas "N SKUs distintos" a unidade é SKU, não caixa.
+  function rotaLacunaHtml(t){
+    if(t.gap === null || t.gap === undefined) return '<td class="num lacuna"></td>';
+    return '<td class="num lacuna ' + (t.gap > 0 ? 'lacuna-pos' : 'lacuna-zero') + '">' + t.gap + '</td>';
+  }
+
   function rotaLinhaHtml(r){
     var t = r.t, c = r.card;
     return '<tr' + (r.primeiro ? ' class="novo-cliente"' : '') + '>' +
@@ -2300,6 +2368,7 @@
       '<td>' + escapeHtml(t.categoria || '—') + '</td>' +
       '<td class="num">' + ((t.qtdSolicitada === null || t.qtdSolicitada === undefined) ? '' : t.qtdSolicitada) + '</td>' +
       '<td class="num">' + ((t.qtdComprada === null || t.qtdComprada === undefined) ? '' : t.qtdComprada) + '</td>' +
+      rotaLacunaHtml(t) +
       '<td class="texto">' + escapeHtml(t.textoTarefa || '') + '</td>' +
       rotaFlagHtml(t.completa) + rotaFlagHtml(t.validada) + rotaFlagHtml(t.preValidada) +
       '</tr>';
@@ -2309,7 +2378,7 @@
     var f = STATE.rota.filters, p = [];
     if(f.dia !== 'all') p.push('Dia de visita: ' + (DIAS_LABEL[f.dia] || f.dia));
     if(f.setor !== 'all') p.push('RN: ' + f.setor + ' · ' + titleCase(STATE.setoresMap.get(f.setor) || ''));
-    if(f.cluster !== 'all') p.push('Cluster: ' + f.cluster);
+    if(f.cluster !== 'all') p.push('Cluster: ' + f.cluster.join(' + '));
     if(f.categoria !== 'all') p.push('Categoria: ' + f.categoria);
     if(f.tipo !== 'all') p.push('Tipo: ' + f.tipo);
     if(f.zero !== 'all') p.push('Cerveja zero: ' + f.zero);
@@ -2355,7 +2424,7 @@
     var vis = rows.slice(0, limite);
     document.getElementById('rotaBody').innerHTML = vis.length
       ? vis.map(rotaLinhaHtml).join('')
-      : '<tr><td class="rota-vazio" colspan="11">Nenhuma tarefa encontrada com esses filtros.</td></tr>';
+      : '<tr><td class="rota-vazio" colspan="12">Nenhuma tarefa encontrada com esses filtros.</td></tr>';
 
     var resumo = rows.length.toLocaleString('pt-BR') + ' tarefas · ' + calc.nClientes.toLocaleString('pt-BR') + ' clientes';
     if(vis.length < rows.length) resumo += ' · mostrando ' + vis.length.toLocaleString('pt-BR');
@@ -2387,7 +2456,7 @@
       var t = r.t, c = r.card;
       linhas.push([
         c.setorCodigo !== null ? c.setorCodigo : '', c.pdv, rotaNome(c), t.clusterPrimario || '', t.categoria || '',
-        t.qtdSolicitada, t.qtdComprada, t.textoTarefa || '',
+        t.qtdSolicitada, t.qtdComprada, (t.gap === null || t.gap === undefined) ? '' : t.gap, t.textoTarefa || '',
         rotaCsvFlag(t.completa), rotaCsvFlag(t.validada), rotaCsvFlag(t.preValidada)
       ].map(rotaCsvEsc).join(';'));
     });
@@ -2410,6 +2479,45 @@
 
   function bindRotaEventos(){
     montarGridFiltrosRota();
+    var rotaGrid = document.getElementById('rotaFilterGrid');
+    function rotaMsFechar(){
+      rotaGrid.querySelectorAll('.ms-wrap.ms-open').forEach(function(w){
+        w.classList.remove('ms-open'); w.querySelector('.ms-btn').setAttribute('aria-expanded', 'false');
+      });
+    }
+    rotaGrid.addEventListener('click', function(e){
+      var btn = e.target.closest('.ms-btn');
+      if(btn){
+        var w = btn.closest('.ms-wrap'), abrir = !w.classList.contains('ms-open');
+        rotaMsFechar();
+        if(abrir){ w.classList.add('ms-open'); btn.setAttribute('aria-expanded', 'true'); }
+        return;
+      }
+      var opt = e.target.closest('.ms-opt');
+      if(!opt) return;
+      var key = opt.closest('.ms-wrap').getAttribute('data-ms'), f = STATE.rota.filters;
+      if(opt.hasAttribute('data-ms-all')){
+        f[key] = 'all'; rotaMsFechar();
+      }else{
+        var val = opt.getAttribute('data-ms-val');
+        var atual = (f[key] === 'all') ? [] : f[key].slice();
+        if(e.ctrlKey || e.metaKey || ROTA_TOQUE){
+          var i = atual.indexOf(val);
+          if(i === -1) atual.push(val); else atual.splice(i, 1);
+          f[key] = atual.length ? atual : 'all';          // painel continua aberto
+        }else{
+          f[key] = (atual.length === 1 && atual[0] === val) ? 'all' : [val];
+          rotaMsFechar();
+        }
+      }
+      STATE.rota.renderLimit = ROTA_PASSO; renderRotaView();
+    });
+    // clique fora fecha (composedPath: o alvo pode já ter saído do DOM com o re-render)
+    document.addEventListener('click', function(e){
+      var caminho = e.composedPath ? e.composedPath() : [];
+      if(!caminho.some(function(n){ return n.classList && n.classList.contains('ms-wrap'); })) rotaMsFechar();
+    });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') rotaMsFechar(); });
     document.getElementById('rotaFilterGrid').addEventListener('change', function(e){
       var key = e.target.getAttribute('data-rota');
       if(!key) return;
@@ -2683,4 +2791,6 @@
   if(hasData) checkGithubLastCommit();
 
 })();
-</script></body></html>
+</script>
+</body>
+</html>
